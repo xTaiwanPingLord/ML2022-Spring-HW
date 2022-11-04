@@ -1,4 +1,3 @@
 
-HW2/timit_11/test_11.npy
-HW2/timit_11/train_11.npy
-HW2/timit_11/train_label_11.npy
+HW2/datasets/*
+
