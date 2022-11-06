@@ -23,7 +23,7 @@ writer = SummaryWriter()
 ##### Hyper-parameters #######################################################
 # training parameters
 ResNET_path = './HW3/models/ResNET.ckpt'
-VGG19_path = './HW3/models/VGG19.ckpt'
+VGG11_path = './HW3/models/VGG11.ckpt'
 dataset_path = './HW3/datasets'
 seed = 0                        # random seed
 
@@ -163,21 +163,21 @@ valid_part = FoodDataset(os.path.join(dataset_path, "validation"), tfm=test_tfm)
 dataset = ConcatDataset([train_part, valid_part])
 
 # create model, define a loss function, and optimizer
-VGG19_train = torchvision.models.vgg19(weights = None).to(device)
-optimizer_VGG19 = torch.optim.AdamW(VGG19_train.parameters(), lr=learning_rate, weight_decay=weight_decay_value)
-scheduler_VGG19 = torch.optim.lr_scheduler.CosineAnnealingLR(
-    optimizer_VGG19, T_max = int(num_epochs/10), eta_min=1e-6)
+VGG11_train = torchvision.models.vgg11(weights = None).to(device)
+optimizer_VGG11 = torch.optim.AdamW(VGG11_train.parameters(), lr=learning_rate, weight_decay=weight_decay_value)
+scheduler_VGG11 = torch.optim.lr_scheduler.CosineAnnealingLR(
+    optimizer_VGG11, T_max = 5, eta_min=1e-6)
 
 ResNET_train = torchvision.models.resnet152(weights = None).to(device)
 optimizer_ResNET = torch.optim.AdamW(ResNET_train.parameters(), lr=learning_rate, weight_decay=weight_decay_value)
 scheduler_ResNET = torch.optim.lr_scheduler.CosineAnnealingLR(
-    optimizer_ResNET, T_max = int(num_epochs/10), eta_min=1e-6)
+    optimizer_ResNET, T_max = 5, eta_min=1e-6)
 criterion = nn.CrossEntropyLoss()
 ##### Training ###############################################################
 stale = 0
 best_acc = 0
 start_time = time()
-
+"""
 for _ in range(5):
     for fold, (train_ids, valid_ids) in enumerate(kfold.split(dataset)):
         print(f'FOLD {fold}')
@@ -195,7 +195,7 @@ for _ in range(5):
         for epoch in range(num_epochs):
             # ---------- Training ----------
             # Make sure the model is in train mode before training.
-            VGG19_train.train()
+            VGG11_train.train()
 
             # These are used to record information in training.
             train_loss = []
@@ -208,23 +208,23 @@ for _ in range(5):
                 #print(imgs.shape,labels.shape)
 
                 # Forward the data. (Make sure data and model are on the same device.)
-                logits = VGG19_train(imgs)
+                logits = VGG11_train(imgs)
 
                 # Calculate the cross-entropy loss.
                 # We don't need to apply softmax before computing cross-entropy as it is done automatically.
                 loss = criterion(logits, labels)
 
                 # Gradients stored in the parameters in the previous step should be cleared out first.
-                optimizer_VGG19.zero_grad()
+                optimizer_VGG11.zero_grad()
 
                 # Compute the gradients for parameters.
                 loss.backward()
 
                 # Clip the gradient norms for stable training.
-                grad_norm = nn.utils.clip_grad_norm_(ResNET_train.parameters(), max_norm=10)
+                grad_norm = nn.utils.clip_grad_norm_(VGG11_train.parameters(), max_norm=10)
 
                 # Update the parameters with computed gradients.
-                optimizer_VGG19.step()
+                optimizer_VGG11.step()
 
                 # Compute the accuracy for current batch.
                 acc = (logits.argmax(dim=-1) == labels.to(device)).float().mean()
@@ -232,20 +232,20 @@ for _ in range(5):
                 # Record the loss and accuracy.
                 train_loss.append(loss.item())
                 train_accs.append(acc)
-            scheduler_VGG19.step()
+            scheduler_VGG11.step()
 
             train_loss = sum(train_loss) / len(train_loss)
             train_acc = sum(train_accs) / len(train_accs)
 
             # Print the information.
             print(
-                f"[ Train | {epoch + 1:03d}/{num_epochs:03d} ] loss = {train_loss:.5f}, acc = {train_acc:.5f}, lr = {scheduler_VGG19.get_last_lr()}, time = {(time() - start_time):5.2f}")
+                f"[ Train | {epoch + 1:03d}/{num_epochs:03d} ] loss = {train_loss:.5f}, acc = {train_acc:.5f}, lr = {scheduler_VGG11.get_last_lr()}, time = {(time() - start_time):5.2f}")
             writer.add_scalar("Train loss:", train_loss, epoch)
             writer.add_scalar("Train Acc:", train_acc, epoch)
 
             # ---------- Validation ----------
             # Make sure the model is in eval mode so that some modules like dropout are disabled and work normally.
-            VGG19_train.eval()
+            VGG11_train.eval()
 
             # These are used to record information in validation.
             valid_loss = []
@@ -261,7 +261,7 @@ for _ in range(5):
                 # We don't need gradient in validation.
                 # Using torch.no_grad() accelerates the forward process.
                 with torch.no_grad():
-                    logits = VGG19_train(imgs.to(device))
+                    logits = VGG11_train(imgs.to(device))
 
                 # We can still compute the loss (but not the gradient).
                 loss = criterion(logits, labels.to(device))
@@ -297,7 +297,7 @@ for _ in range(5):
             if valid_acc > best_acc:
                 print(f"Best model found at epoch {epoch}, saving model")
                 # only save best to prevent output memory exceed error
-                torch.save(VGG19_train.state_dict(), VGG19_path)
+                torch.save(VGG11_train.state_dict(), VGG11_path)
                 best_acc = valid_acc
                 stale = 0
             else:
@@ -306,7 +306,13 @@ for _ in range(5):
                     print(
                         f"No improvment {patience} consecutive epochs, early stopping")
                     break
-
+            if stale > patience:
+                break
+        if stale > patience:
+            break
+    if stale > patience:
+        stale = 0
+        break
 
 for _ in range(5):
     for fold, (train_ids, valid_ids) in enumerate(kfold.split(dataset)):
@@ -436,7 +442,14 @@ for _ in range(5):
                     print(
                         f"No improvment {patience} consecutive epochs, early stopping")
                     break
-
+            if stale > patience:
+                break
+        if stale > patience:
+            break
+    if stale > patience:
+        stale = 0
+        break
+"""
 
 ##### Testing ################################################################
 # load data
@@ -448,14 +461,14 @@ test_loader_train_tfm = DataLoader(test_set_train_tfm, batch_size=batch_size,
                          shuffle=False, num_workers=0, pin_memory=True)
 
 # load model
-#model_best = torchvision.models.vgg19_bn(weights=None).to(device)
-VGG19_best = torchvision.models.VGG19(weights = None).to(device)
+#model_best = torchvision.models.vgg11_bn(weights=None).to(device)
+VGG11_best = torchvision.models.vgg11(weights = None).to(device)
 ResNET_best = torchvision.models.resnet152(weights = None).to(device)
-VGG19_best.load_state_dict(torch.load(VGG19_path))
+VGG11_best.load_state_dict(torch.load(VGG11_path))
 ResNET_best.load_state_dict(torch.load(ResNET_path))
 
 # Make prediction.
-VGG19_best.eval()
+VGG11_best.eval()
 ResNET_best.eval()
 prediction = []
 test_preds = np.array([[]],)
@@ -463,13 +476,13 @@ test_preds_train = np.array([[]],dtype=float)
 with torch.no_grad():
         ##Warning: close your eyes and don't look at my shit code :(
     for ((data0, _),(data1, _),(data2, _),(data3, _),(data4, _)) in tqdm(zip(test_loader_test_tfm, test_loader_train_tfm,test_loader_train_tfm,test_loader_train_tfm,test_loader_train_tfm), leave=True):
-        pred0_V, pred0_R = VGG19_best(data0.to(device)).cpu(), ResNET_best(data1.to(device)).cpu()
-        pred1_V, pred1_R = VGG19_best(data1.to(device)).cpu(), ResNET_best(data1.to(device)).cpu()
-        pred2_V, pred2_R = VGG19_best(data2.to(device)).cpu(), ResNET_best(data2.to(device)).cpu()
-        pred3_V, pred3_R = VGG19_best(data3.to(device)).cpu(), ResNET_best(data3.to(device)).cpu()
-        pred4_V, pred4_R = VGG19_best(data4.to(device)).cpu(), ResNET_best(data4.to(device)).cpu()
+        pred0_V, pred0_R = VGG11_best(data0.to(device)).cpu(), ResNET_best(data1.to(device)).cpu()
+        pred1_V, pred1_R = VGG11_best(data1.to(device)).cpu(), ResNET_best(data1.to(device)).cpu()
+        pred2_V, pred2_R = VGG11_best(data2.to(device)).cpu(), ResNET_best(data2.to(device)).cpu()
+        pred3_V, pred3_R = VGG11_best(data3.to(device)).cpu(), ResNET_best(data3.to(device)).cpu()
+        pred4_V, pred4_R = VGG11_best(data4.to(device)).cpu(), ResNET_best(data4.to(device)).cpu()
 
-        test_pred_V = np.sum((pred0_V*0.6, pred1_V*0.1, pred2_V*0.1, pred3_V*0.1, pred4_V*0.1), axis=0)
+        test_pred_V = np.sum((pred0_V*0.6, pred1_V*0.1, pred2_Vg*0.1, pred3_V*0.1, pred4_V*0.1), axis=0)
         test_pred_R = np.sum((pred0_R*0.6, pred1_R*0.1, pred2_R*0.1, pred3_R*0.1, pred4_R*0.1), axis=0)
         test_pred = np.sum((test_pred_V, test_pred_R), axis=0)
         test_label = np.argmax(test_pred, axis=1)
