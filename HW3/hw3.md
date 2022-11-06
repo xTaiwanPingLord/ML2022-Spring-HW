@@ -24,3 +24,5 @@ https://debuggercafe.com/wp-content/uploads/2021/04/vgg.jpg
 BN Dropout added
 
 Transform: 
+
+MY TTA is totally a mess
