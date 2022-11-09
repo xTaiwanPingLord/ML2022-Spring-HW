@@ -38,10 +38,9 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print(f'DEVICE: {device}')
 _exp_name = "sample"
 
+
 ##### Functions ##############################################################
 # fix seed for reproducibility
-
-
 def same_seeds(seed):
     torch.manual_seed(seed)
     if torch.cuda.is_available():
@@ -51,8 +50,6 @@ def same_seeds(seed):
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
 
-
-# data
 # Transforms: Normally, We don't need augmentations in testing and validation.
 # All we need here is to resize the PIL image and transform it into Tensor.
 test_tfm = transforms.Compose([
@@ -77,9 +74,7 @@ train_tfm = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
-
 class FoodDataset(Dataset):
-
     def __init__(self, path, tfm=test_tfm, files=None):
         super(FoodDataset).__init__()
         self.path = path
@@ -97,9 +92,7 @@ class FoodDataset(Dataset):
         fname = self.files[idx]
         im = Image.open(fname)
         im = self.transform(im)
-        #im = self.data[idx]
         try:
-            ###############################################self.test = fname.split("/")[-1].split("\\")[-1].split("_")[0]
             label = int(fname.split("/")[-1].split("\\")[-1].split("_")[0])
         except:
             label = -1  # test has no label
@@ -126,6 +119,8 @@ optimizer = torch.optim.AdamW(
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
     optimizer, T_max=4, eta_min=1e-5)
 criterion = nn.CrossEntropyLoss()
+
+
 ##### Training ###############################################################
 stale = 0
 best_acc = 0
@@ -287,7 +282,6 @@ model = torchvision.models.shufflenet_v2_x2_0(weights=None).to(device)
 model.load_state_dict(torch.load(model_path))
 
 # Make prediction.
-# VGG11_best.eval()
 model.eval()
 prediction = []
 test_preds = np.array([[]],)
@@ -308,17 +302,13 @@ with torch.no_grad():
         prediction += test_label.squeeze().tolist()
 
 # create test csv
-
-
 def pad4(i):
     return "0"*(4-len(str(i)))+str(i)
-
 
 df = pd.DataFrame()
 df["Id"] = [pad4(i) for i in range(1, len(test_set_test_tfm)+1)]
 df["Category"] = prediction
 df.to_csv("./HW3/submission.csv", index=False)
-
 
 print(f"time = {(time() - start_time):5.2f}")
 os.system("shutdown /s /t 60")

@@ -1,4 +1,4 @@
-# HW1: Classification
+# HW2: Classification
 
 ## Concat frames
 一段音訊的資料很難在單個frame裡面表現，把多個frame接在一起能明顯改善。
