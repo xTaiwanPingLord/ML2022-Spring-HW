@@ -24,8 +24,8 @@ model_path = './HW3/models/ShuffelNetV2.ckpt'
 dataset_path = './HW3/datasets'
 seed = 20221109                        # random seed
 
-batch_size = 96                # batch size
-num_epochs = 8  # (8*4)*20                 # the number of training epoch
+batch_size = 300                # batch size: 96 For Resnet152-23.5GB
+num_epochs = 8  # (8*4)*25                 # the number of training epoch
 
 learning_rate = 1e-3          # learning rate
 weight_decay_value = 1e-5
@@ -130,7 +130,7 @@ criterion = nn.CrossEntropyLoss()
 stale = 0
 best_acc = 0
 start_time = time()
-for _ in range(20):
+for _ in range(25):
     for fold, (train_ids, valid_ids) in enumerate(kfold.split(dataset)):
         print(f'FOLD {fold}')
         print('--------------------------------')
@@ -292,22 +292,7 @@ model.eval()
 prediction = []
 test_preds = np.array([[]],)
 test_preds_train = np.array([[]], dtype=float)
-"""
-with torch.no_grad():
-        ##Warning: close your eyes and don't look at my shit code :(
-    for ((data0, _),(data1, _),(data2, _),(data3, _),(data4, _)) in tqdm(zip(test_loader_test_tfm, test_loader_train_tfm,test_loader_train_tfm,test_loader_train_tfm,test_loader_train_tfm), leave=True):
-        pred0_V, pred0_R = VGG11_best(data0.to(device)).cpu(), model(data1.to(device)).cpu()
-        pred1_V, pred1_R = VGG11_best(data1.to(device)).cpu(), model(data1.to(device)).cpu()
-        pred2_V, pred2_R = VGG11_best(data2.to(device)).cpu(), model(data2.to(device)).cpu()
-        pred3_V, pred3_R = VGG11_best(data3.to(device)).cpu(), model(data3.to(device)).cpu()
-        pred4_V, pred4_R = VGG11_best(data4.to(device)).cpu(), model(data4.to(device)).cpu()
 
-        test_pred_V = np.sum((pred0_V*0.6, pred1_V*0.1, pred2_Vg*0.1, pred3_V*0.1, pred4_V*0.1), axis=0)
-        test_pred_R = np.sum((pred0_R*0.6, pred1_R*0.1, pred2_R*0.1, pred3_R*0.1, pred4_R*0.1), axis=0)
-        test_pred = np.sum((test_pred_V, test_pred_R), axis=0)
-        test_label = np.argmax(test_pred, axis=1)
-        prediction += test_label.squeeze().tolist()
-"""
 with torch.no_grad():
     # Warning: close your eyes and don't look at my shit code :(
     for ((data0, _), (data1, _), (data2, _), (data3, _), (data4, _)) in tqdm(zip(test_loader_test_tfm, test_loader_train_tfm, test_loader_train_tfm, test_loader_train_tfm, test_loader_train_tfm), leave=True):
@@ -334,5 +319,6 @@ df["Id"] = [pad4(i) for i in range(1, len(test_set_test_tfm)+1)]
 df["Category"] = prediction
 df.to_csv("./HW3/submission.csv", index=False)
 
-#os.system("shutdown /s /t 60")
+
 print(f"time = {(time() - start_time):5.2f}")
+os.system("shutdown /s /t 60")
