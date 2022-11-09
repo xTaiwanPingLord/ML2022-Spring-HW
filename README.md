@@ -12,3 +12,29 @@
 
 If you consider the content is inappropriate, feel free to contact me:
 tojimmy0917@gmail.com
+#
+
+#### **本人使用的是自己的桌機及筆電:**
+```
+Windows 11 dev channel
+python 3.9.13
+pytorch 0.13.0
+```
+
+##### 筆電:
+```
+Asus GA503QM
+Ryzen 7 5800hs
+DDR4 3200 CL22 16+32GB
+RTX3060 6GB Mobile (105w vBIOS)
+PM981 1TB + PM981A 1TB
+```
+##### 桌機:
+```
+ROG STRIX Z790-A GAMING WIFI D4
+Intel I7-13700KF (OC: 1xP 5.7GHz, 8xP 5.5GHz, 8xE 4.5Ghz)
+Anacomda DDR4 3200 CL22 16GB*4 (OC: 3866 16-20-20-38 1T Gear1)
+Gigabyte RTX4090 24GB Windforce
+SN770 500GB + PM9A1 2TB
+FSP Hydro G PRO 1000w ATX3.0 (定制模組線)
+```
