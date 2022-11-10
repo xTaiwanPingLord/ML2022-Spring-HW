@@ -20,11 +20,11 @@ writer = SummaryWriter()
 
 ##### Hyper-parameters #######################################################
 # training parameters
-model_path = './HW3/models/ShuffelNetV2.ckpt'
+model_path = './HW3/models/ResNET_2.ckpt'
 dataset_path = './HW3/datasets'
-seed = 20221109                        # random seed
+seed = 20221110                        # random seed
 
-batch_size = 300                # batch size: 96 For Resnet152-23.5GB
+batch_size = 96                # batch size: 96 For Resnet152-23.5GB
 num_epochs = 8  # (8*4)*25                 # the number of training epoch
 
 learning_rate = 1e-3          # learning rate
@@ -112,8 +112,8 @@ valid_part = FoodDataset(os.path.join(
 dataset = ConcatDataset([train_part, valid_part])
 
 # create model, define a loss function, and optimizer
-model = torchvision.models.shufflenet_v2_x2_0(weights=None).to(device)
-# model = torchvision.models.resnet152(weights=None).to(device)
+model = torchvision.models.resnet152(weights=None).to(device)
+model.load_state_dict(torch.load('./HW3/models/ResNET.ckpt'))
 optimizer = torch.optim.AdamW(
     model.parameters(), lr=learning_rate, weight_decay=weight_decay_value)
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
@@ -277,8 +277,7 @@ test_loader_train_tfm = DataLoader(test_set_train_tfm, batch_size=batch_size,
                                    shuffle=False, num_workers=0, pin_memory=True)
 
 # load model
-model = torchvision.models.shufflenet_v2_x2_0(weights=None).to(device)
-# model = torchvision.models.resnet152(weights=None).to(device)
+model = torchvision.models.resnet152(weights=None).to(device)
 model.load_state_dict(torch.load(model_path))
 
 # Make prediction.
@@ -311,4 +310,4 @@ df["Category"] = prediction
 df.to_csv("./HW3/submission.csv", index=False)
 
 print(f"time = {(time() - start_time):5.2f}")
-os.system("shutdown /s /t 60")
+# os.system("shutdown /s /t 60")
