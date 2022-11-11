@@ -28,6 +28,12 @@ Target -1 is out of bounds.
 於是我Review一次Code，在`class FoodDataset(Dataset)`中`def __getitem__(self, idx):`
 發現沒有正確讀到資料就會回傳`-1`，修改一下`label = int(fname.split("/")[-1].split("\\")[-1].split("_")[0])`中split的規則就正常了，沒有更多錯誤發生。
 
+# The result and my method
+## Score
+測試了幾個network，Train出來效果最好的是`ResNET152`，如圖。
+調參數和加了一些優化都沒有辦法過Strong baseline，之後有空再來嘗試
+![](https://i.imgur.com/4RskXQp.png)
+
 ## Data Augmentation(Transform)
 影像增強，這裡我`test_tfm`和`train_tfm`使用了不同的Transform，具體效果可以直接Google Pytorch的相關文檔。
 觀察了一下圖片最小約是256x256，故調整Resize大小。
@@ -46,3 +52,4 @@ Target -1 is out of bounds.
 
 ## Scheduler
 老朋友`CosineAnnealingLR`，每跑8個fold會循環一次LR
+
