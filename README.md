@@ -3,7 +3,8 @@
 這個Repo是拿來放我在`李宏毅 (Hung-yi Lee) 機器學習 Machine Learning 2022 Spring`中寫or修改的Code及思路
 如果你覺得這個Homework reference對你有幫助，**給個star吧**
 
-
+## 2023 update:
+因為目前在做其他的專題，此repo暫停更新
 
 
 
